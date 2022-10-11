@@ -1,64 +1,55 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Meteor } from "meteor/meteor";
 import { useNavigate } from "react-router-dom";
-import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import { Container, Grid } from "@mui/material";
 import { TemporaryDrawer } from "../../components/drawer/drawer";
-import { useTracker } from "meteor/react-meteor-data";
 import { TasksCollection } from "../../../api/collection/taskscollection";
-
-const bull = (
-  <Box
-    component="span"
-    sx={{ display: "inline-block", mx: "2px", transform: "scale(0.8)" }}
-  >
-    •
-  </Box>
-);
-
-type TUser = {
-  id: string;
-  username: string;
-  profile: {
-    birthDate: string;
-    company: string;
-    email: string;
-    name: string;
-    photo: string;
-    sex: number;
-  };
-};
+import { TCountTasks, TUser } from "../../type/types";
+import { useTracker } from "meteor/react-meteor-data";
 
 export function HomeUser() {
-  let dataUser;
-  const navegate = useNavigate();
-  const { user } = useTracker(() => {
-    const user = Meteor.users.findOne({ _id: Meteor.userId() });
+  let user: TUser;
+  let tasks!: TCountTasks;
 
-    return { user };
-  });
+  const navigate = useNavigate();
 
-  const { totalTasks, completed, inProgress } = useTracker(() => {
-    const noDataAvailable = { tasks: [], pendingTasksCount: 0 };
-    if (!Meteor.user()) {
-      return noDataAvailable;
+  useTracker(() => {
+    const meteorUser = Meteor.user();
+
+    if (meteorUser) {
+      user = {
+        id: meteorUser._id,
+        username: meteorUser.username as string,
+        profile: {
+          birthDate: meteorUser.profile.birthDate as string,
+          company: meteorUser.profile.company as string,
+          email: meteorUser.profile.email as string,
+          name: meteorUser.profile.name as string,
+          photo: meteorUser.profile.photo as string,
+          sex: meteorUser.profile.sex as string,
+        },
+      };
     }
+
     const handler = Meteor.subscribe("taskCount");
 
     if (!handler.ready()) {
-      return { ...noDataAvailable, isLoading: true };
+      console.log("error");
     }
+
     const totalTasks = TasksCollection.find().count();
     const completed = TasksCollection.find({ situation: "2" }).count();
     const inProgress = TasksCollection.find({ situation: "1" }).count();
 
-    return { totalTasks, completed, inProgress };
+    tasks = {
+      completed: completed,
+      inProgress: inProgress,
+      totalTasks: totalTasks,
+    };
   });
-
-  dataUser = user;
 
   return (
     <Container
@@ -67,7 +58,7 @@ export function HomeUser() {
         marginTop: 8,
       }}
     >
-      <TemporaryDrawer dataUser={dataUser} />
+      {user?.id && <TemporaryDrawer />}
       <Typography
         sx={{
           marginTop: 8,
@@ -78,7 +69,7 @@ export function HomeUser() {
         component="h1"
         variant="h5"
       >
-        Olá {dataUser.username}, seja Bem vindo ao todo list
+        Olá {user?.username}, seja Bem vindo ao todo list
       </Typography>
 
       <Grid container spacing={2}>
@@ -88,7 +79,7 @@ export function HomeUser() {
               <Typography variant="h5" component="div">
                 Total de tarefas cadastradas
               </Typography>
-              <Typography variant="h1">{totalTasks}</Typography>
+              <Typography variant="h1">{tasks?.totalTasks}</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -97,9 +88,9 @@ export function HomeUser() {
           <Card sx={{ minWidth: 275 }}>
             <CardContent>
               <Typography variant="h5" component="div">
-                Total de tarefas concluidas
+                Total de tarefas concluídas
               </Typography>
-              <Typography variant="h1">{completed}</Typography>
+              <Typography variant="h1">{tasks?.completed}</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -110,13 +101,13 @@ export function HomeUser() {
               <Typography variant="h5" component="div">
                 Total de tarefas em andamento
               </Typography>
-              <Typography variant="h1">{inProgress}</Typography>
+              <Typography variant="h1">{tasks?.inProgress}</Typography>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={6}>
-          <Card sx={{ cursor: "pointer" }} onClick={() => navegate("/tarefas")}>
+          <Card sx={{ cursor: "pointer" }} onClick={() => navigate("/tarefas")}>
             <CardContent>
               <Typography variant="h2" component="div">
                 Visualizar tarefas

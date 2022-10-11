@@ -55,7 +55,7 @@ export function NewTask() {
         description,
         taskDate.format("DD/MM/YYYY hh:mm:ss"),
         photo,
-        checked,
+        checked ?? false,
         situation
       );
     } else {
@@ -65,7 +65,7 @@ export function NewTask() {
         description,
         taskDate.format("DD/MM/YYYY hh:mm:ss"),
         photo,
-        checked,
+        checked ?? false,
         situation
       );
     }

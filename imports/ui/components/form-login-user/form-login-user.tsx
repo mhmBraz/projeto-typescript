@@ -7,23 +7,27 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { useNavigate } from "react-router-dom";
+import { Tracker } from "meteor/tracker";
 
 export function FormLoginUser() {
-  const navegate = useNavigate();
-  const [userName, setUserName] = useState<string>({} as string);
-  const [userPassword, setUserPassword] = useState<string>({} as string);
+  const navigate = useNavigate();
+  const [userName, setUserName] = useState("" as string);
+  const [userPassword, setUserPassword] = useState("" as string);
 
-  function login(event) {
+  function login(event: React.MouseEvent<HTMLElement>) {
     event.preventDefault();
-    console.log(userName, userPassword);
-
     Meteor.loginWithPassword(userName, userPassword);
 
-    navegate("/dashboard");
+    const userMeteor = Tracker.autorun(() => {
+      return Meteor.user();
+    });
+    if (userMeteor) {
+      navigate("/dashboard");
+    }
   }
 
-  function register(event: React.ChangeEvent<HTMLInputElement>) {
-    navegate("/registrar");
+  function register() {
+    navigate("/registrar");
   }
 
   return (
@@ -39,7 +43,7 @@ export function FormLoginUser() {
         <Typography component="h1" variant="h5">
           Bem vindo ao todo list
         </Typography>
-        <Box component="form" onSubmit={login} noValidate sx={{ mt: 1 }}>
+        <Box component="form" onSubmit={login} sx={{ mt: 1 }}>
           <TextField
             onChange={(e) => setUserName(e.target.value)}
             margin="normal"
@@ -48,7 +52,6 @@ export function FormLoginUser() {
             id="name"
             label="Nome"
             name="nome"
-            autoFocus
           />
           <TextField
             onChange={(e) => setUserPassword(e.target.value)}

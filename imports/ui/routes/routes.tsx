@@ -13,4 +13,5 @@ export const routes = [
   { path: "/editarTarefa", element: <NewTask /> },
   { path: "/criarTarefa", element: <NewTask /> },
   { path: "/editar", element: <FormRegisterUser /> },
+  { path: "/editar/:userId", element: <FormRegisterUser /> },
 ];

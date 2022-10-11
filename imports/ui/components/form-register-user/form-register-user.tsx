@@ -7,34 +7,71 @@ import {
   FormControl,
   Grid,
   InputLabel,
+  ListItemAvatar,
   MenuItem,
   Select,
   SelectChangeEvent,
   TextField,
 } from "@mui/material";
 import React, { useState } from "react";
-import PersonIcon from "@mui/icons-material/Person";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { DropZone } from "../drop-zone";
 import { Meteor } from "meteor/meteor";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
+import { TUser } from "../../type";
+import { Mongo } from "meteor/mongo";
+import { Tracker } from "meteor/tracker";
+import { useTracker } from "meteor/react-meteor-data";
 
 export function FormRegisterUser() {
-  const navegate = useNavigate();
-  const { state } = useLocation();
-  const userEdit = state?.user;
+  let userEdit!: TUser;
+  const navigate = useNavigate();
+  let params: string = useParams().userId as string;
 
-  const [username, setUsername] = useState<string>(
-    userEdit?.profile?.name || ""
+  if (params) {
+    useTracker(() => {
+      const user = Meteor.users.findOne({
+        _id: Meteor.userId() as
+          | string
+          | RegExp
+          | Mongo.FieldExpression<string>
+          | undefined,
+      });
+
+      if (user) {
+        userEdit = {
+          id: (user?._id ?? "") as string,
+          username: (user?.username ?? "") as string,
+          profile: {
+            birthDate: (user?.profile.birthDate ?? "") as string,
+            company: (user?.profile.company ?? "") as string,
+            email: (user?.profile.email ?? "") as string,
+            name: (user?.profile.nam ?? "") as string,
+            photo: (user?.profile.photo ?? "") as string,
+            sex: (user?.profile.sex ?? "") as string,
+          },
+        };
+      }
+    });
+  }
+
+  const [username, setUsername] = useState(
+    (userEdit?.username || "") as string
   );
-  const [password, setPassword] = useState<string>("");
-  const [passwordOld, setPasswordOld] = useState<string>("");
-  const [email, setEmail] = useState<string>(userEdit?.profile?.email);
-  const [sex, setSex] = useState<string>(userEdit?.profile?.sex);
-  const [photo, setPhoto] = useState<string>("");
-  const [company, setCompany] = useState<string>(userEdit?.profile?.company);
+  const [password, setPassword] = useState("" as string);
+  const [passwordOld, setPasswordOld] = useState("" as string);
+  const [email, setEmail] = useState(
+    (userEdit?.profile?.email || "") as string
+  );
+  const [sex, setSex] = useState((userEdit?.profile?.sex || "") as string);
+  const [photo, setPhoto] = useState(
+    (userEdit?.profile?.photo || "") as string
+  );
+  const [company, setCompany] = useState(
+    (userEdit?.profile?.company || "") as string
+  );
   const [birthDate, setBirthDate] = useState<Dayjs | null>(
     dayjs(userEdit?.profile?.birthDate || "")
   );
@@ -50,7 +87,7 @@ export function FormRegisterUser() {
   function register(event: React.ChangeEvent<HTMLInputElement>) {
     event.preventDefault();
 
-    if (!userEdit === undefined) {
+    if (userEdit.id) {
       Meteor.call(
         "user.update",
         username,
@@ -60,7 +97,7 @@ export function FormRegisterUser() {
         sex,
         photo,
         company,
-        birthDate
+        birthDate?.format("YYYY/MM/DD")
       );
     } else {
       Meteor.call(
@@ -71,16 +108,16 @@ export function FormRegisterUser() {
         sex,
         photo,
         company,
-        birthDate
+        birthDate?.format("YYYY/MM/DD")
       );
     }
   }
 
   function login() {
-    if (!userEdit === undefined) {
-      navegate("/dashboard");
+    if (userEdit.id) {
+      navigate("/dashboard");
     } else {
-      navegate("/");
+      navigate("/");
     }
   }
 
@@ -107,9 +144,9 @@ export function FormRegisterUser() {
             <Button onClick={login}>Voltar</Button>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
-              <PersonIcon />
-            </Avatar>
+            <ListItemAvatar>
+              <Avatar alt="Remy Sharp" src={userEdit.profile.photo || ""} />
+            </ListItemAvatar>
           </Grid>
         </Grid>
 
@@ -128,7 +165,7 @@ export function FormRegisterUser() {
                 autoFocus
               />
             </Grid>
-            {userEdit && (
+            {userEdit.id && (
               <Grid item xs={12} sm={6}>
                 <TextField
                   onChange={(e) => setPassword(e.target.value)}
@@ -147,7 +184,7 @@ export function FormRegisterUser() {
                 value={passwordOld || ""}
                 fullWidth
                 id="password"
-                label="Senha"
+                label={userEdit.id ? "Nova senha" : "Senha"}
                 type={"password"}
               />
             </Grid>
@@ -216,7 +253,7 @@ export function FormRegisterUser() {
             }}
           >
             <Button type="submit" variant="contained" sx={{ mt: 3, mb: 2 }}>
-              {userEdit ? "Editar" : "Cadastrar"}
+              {userEdit.id ? "Editar" : "Cadastrar"}
             </Button>
           </Box>
         </Box>

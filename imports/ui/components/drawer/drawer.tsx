@@ -1,6 +1,5 @@
-import React, { Fragment, useEffect } from "react";
-import { Meteor } from "meteor/meteor";
-import { useNavigate } from "react-router-dom";
+import React from "react";
+import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import Button from "@mui/material/Button";
@@ -12,27 +11,38 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import PersonIcon from "@mui/icons-material/Person";
 import HomeIcon from "@mui/icons-material/Home";
-import { Avatar, CardMedia, ListItemAvatar, Typography } from "@mui/material";
+import { Avatar, ListItemAvatar } from "@mui/material";
+import { TUser } from "../../type";
+import { useTracker } from "meteor/react-meteor-data";
+import { Meteor } from "meteor/meteor";
 
 type Anchor = string;
 
-export function TemporaryDrawer(props: any) {
-  const navegate = useNavigate();
+export function TemporaryDrawer() {
+  let user: TUser;
+
+  useTracker(() => {
+    const meteorUser = Meteor.user();
+
+    if (meteorUser) {
+      user = {
+        id: meteorUser._id,
+        username: meteorUser.username as string,
+        profile: {
+          birthDate: meteorUser.profile.birthDate as string,
+          company: meteorUser.profile.company as string,
+          email: meteorUser.profile.email as string,
+          name: meteorUser.profile.name as string,
+          photo: meteorUser.profile.photo as string,
+          sex: meteorUser.profile.sex as string,
+        },
+      };
+    }
+  });
+
   const [state, setState] = React.useState({
     left: false,
   });
-
-  function drawerNavegateUser(event) {
-    console.log(event.nativeEvent);
-
-    ///// if (title === "Inicio") {
-    //   navegate("/dashboard");
-    // } else if (title === "Perfil") {
-    //   navegate("/editar", { state: { user: props.dataUser } });
-    // } else if (title === "Tarefas") {
-    //   navegate("/tarefas");
-    // }
-  }
 
   const toggleDrawer =
     (anchor: Anchor, open: boolean) =>
@@ -56,21 +66,27 @@ export function TemporaryDrawer(props: any) {
     >
       <>
         <ListItemAvatar>
-          <Avatar alt="Remy Sharp" src={props.dataUser?.profile?.photo} />
+          <Avatar alt="Remy Sharp" src={user?.profile?.photo} />
         </ListItemAvatar>
-        <h4>Nome: {props.dataUser?.username}</h4>
-        <h5>Email: {props.dataUser?.profile?.email}</h5>
+        <h4>Nome: {user?.username}</h4>
+        <h5>Email: {user?.profile?.email}</h5>
       </>
       <Divider />
       <List>
-        {["Inicio", "Perfil", "Tarefas"].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton onClick={(valeu) => drawerNavegateUser(valeu)}>
-              <ListItemIcon>
-                {index % 2 === 0 ? <HomeIcon /> : <PersonIcon />}
-              </ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItemButton>
+        {[
+          ["Inicio", "/dashboard"],
+          ["Perfil", `/editar/${user?.id}`],
+          ["Tarefas", "/tarefas"],
+        ].map((text, index) => (
+          <ListItem key={text[0]} disablePadding>
+            <Link to={text[1]}>
+              <ListItemButton>
+                <ListItemIcon>
+                  {index % 2 === 0 ? <HomeIcon /> : <PersonIcon />}
+                </ListItemIcon>
+                <ListItemText primary={text[0]} />
+              </ListItemButton>
+            </Link>
           </ListItem>
         ))}
       </List>

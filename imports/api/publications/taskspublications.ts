@@ -1,14 +1,19 @@
 import { Meteor } from "meteor/meteor";
 import { TasksCollection } from "../collection/taskscollection";
 
-Meteor.publish("tasks", function publishTasks() {
+Meteor.publish("tasks", function publishTasks(statusCheck) {
   const userId = Meteor.user()._id;
 
+  const filter = [{ private: true }, { "user.id": userId }];
+
+  if (statusCheck) {
+    filter.push({ situation: { $eq: "2" } });
+  } else {
+    filter.push({ situation: { $ne: "-1" } });
+  }
+
   return TasksCollection.find({
-    $or: [
-      { $and: [{ private: true }, { "user.id": userId }] },
-      { private: false },
-    ],
+    $or: [{ $and: filter }, { private: false }],
   });
 });
 

@@ -3,8 +3,10 @@ import {
   Avatar,
   Box,
   Button,
+  Checkbox,
   Container,
   Fab,
+  FormControlLabel,
   Grid,
   List,
   ListItem,
@@ -12,25 +14,28 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import * as React from "react";
+import React, { useState } from "react";
 import { TasksCollection } from "../../../api/collection/taskscollection";
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { useNavigate } from "react-router-dom";
 import { LongMenu } from "../../components/long-menu/long-menu";
 import AddIcon from "@mui/icons-material/Add";
+import { ReactiveVar } from "meteor/reactive-var";
 
 export function Tasks() {
   const navegate = useNavigate();
 
+  const [checked, setChecked] = useState();
+
   const { tasks } = useTracker(() => {
-    const handler = Meteor.subscribe("tasks");
+    const handler = Meteor.subscribe("tasks", checked);
 
     if (!handler.ready()) {
-      console.log("error");
+      return { tasks: [] };
     }
 
-    const tasks = TasksCollection.find().fetch();
+    const tasks = TasksCollection.find({}).fetch();
     console.log(tasks);
 
     return { tasks };
@@ -43,6 +48,10 @@ export function Tasks() {
   function newTask() {
     navegate("/criarTarefa");
   }
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setChecked.set(event.target.checked);
+  };
 
   return (
     <Container
@@ -79,6 +88,12 @@ export function Tasks() {
         <List
           sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}
         >
+          <FormControlLabel
+            control={
+              <Checkbox onChange={handleChange} checked={checked || false} />
+            }
+            label="Exibir somentes as concluidas"
+          />
           {tasks.map((task, index) => {
             return (
               <ListItem key={index} disablePadding>

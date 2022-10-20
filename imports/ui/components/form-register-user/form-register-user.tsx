@@ -22,12 +22,12 @@ import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
 import { TUser } from "../../type";
 import { Mongo } from "meteor/mongo";
-import { Tracker } from "meteor/tracker";
 import { useTracker } from "meteor/react-meteor-data";
 
 export function FormRegisterUser() {
-  let userEdit!: TUser;
   const navigate = useNavigate();
+
+  let userEdit!: TUser;
   let params: string = useParams().userId as string;
 
   if (params) {
@@ -87,7 +87,7 @@ export function FormRegisterUser() {
   function register(event: React.ChangeEvent<HTMLInputElement>) {
     event.preventDefault();
 
-    if (userEdit.id) {
+    if (userEdit) {
       Meteor.call(
         "user.update",
         username,
@@ -114,7 +114,7 @@ export function FormRegisterUser() {
   }
 
   function login() {
-    if (userEdit.id) {
+    if (userEdit) {
       navigate("/dashboard");
     } else {
       navigate("/");
@@ -145,7 +145,7 @@ export function FormRegisterUser() {
           </Grid>
           <Grid item xs={12} sm={6}>
             <ListItemAvatar>
-              <Avatar alt="Remy Sharp" src={userEdit.profile.photo || ""} />
+              <Avatar alt="Remy Sharp" src={userEdit?.profile.photo || ""} />
             </ListItemAvatar>
           </Grid>
         </Grid>
@@ -165,7 +165,7 @@ export function FormRegisterUser() {
                 autoFocus
               />
             </Grid>
-            {userEdit.id && (
+            {userEdit?.id && (
               <Grid item xs={12} sm={6}>
                 <TextField
                   onChange={(e) => setPassword(e.target.value)}
@@ -184,7 +184,7 @@ export function FormRegisterUser() {
                 value={passwordOld || ""}
                 fullWidth
                 id="password"
-                label={userEdit.id ? "Nova senha" : "Senha"}
+                label={userEdit?.id ? "Nova senha" : "Senha"}
                 type={"password"}
               />
             </Grid>
@@ -201,6 +201,7 @@ export function FormRegisterUser() {
                 >
                   <MenuItem value={"10"}>Masculino</MenuItem>
                   <MenuItem value={"20"}>Feminino</MenuItem>
+                  <MenuItem value={"30"}>Outros</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -253,7 +254,7 @@ export function FormRegisterUser() {
             }}
           >
             <Button type="submit" variant="contained" sx={{ mt: 3, mb: 2 }}>
-              {userEdit.id ? "Editar" : "Cadastrar"}
+              {userEdit?.id ? "Editar" : "Cadastrar"}
             </Button>
           </Box>
         </Box>

@@ -17,8 +17,8 @@ export function LongMenu(props: any) {
   function handleClick(event: React.MouseEvent<HTMLElement>) {
     setAnchorEl(event.currentTarget);
   }
-  function handleClose(event) {
-    if (event === "Remover") {
+  function handleClose(event: React.MouseEvent<HTMLElement>) {
+    if (event.currentTarget.id === "Remover") {
       Meteor.call("tasks.remove", props.task._id);
     } else {
       navegate("/editarTarefa", { state: { task: props.task } });
@@ -57,8 +57,9 @@ export function LongMenu(props: any) {
         {options.map((option) => (
           <MenuItem
             key={option}
+            id={option}
             selected={option === "Pyxis"}
-            onClick={() => handleClose(option)}
+            onClick={handleClose}
           >
             {option}
           </MenuItem>

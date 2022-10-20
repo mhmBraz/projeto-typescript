@@ -21,22 +21,27 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
 import { useEffect } from "react";
+import { TTasks } from "../../type";
 
 export function NewTask() {
   const navegate = useNavigate();
   const { state } = useLocation();
-  const taskEdit = state?.task;
+  const taskEdit: TTasks = state?.task;
 
   const [checked, setChecked] = useState<boolean>();
-  const [name, Setname] = useState<String>("");
-  const [description, Setdescription] = useState<String>("");
+  const [name, Setname] = useState<string>("");
+  const [description, Setdescription] = useState<string>("");
   const [photo, setPhoto] = React.useState("");
-  const [situation, setSituation] = React.useState<number>("0");
-  const [taskDate, setTaskDate] = React.useState<Dayjs | null>(dayjs());
+  const [situation, setSituation] = React.useState<string>("0");
+  const [taskDate, setTaskDate] = React.useState<Dayjs | null | String>(
+    dayjs()
+  );
 
   useEffect(() => {
+    console.log(taskEdit);
+
     if (taskEdit) {
-      setChecked(taskEdit?.completed);
+      setChecked(taskEdit?.private);
       Setname(taskEdit?.name);
       Setdescription(taskEdit?.description);
       setTaskDate(taskEdit?.createdAt);
@@ -44,8 +49,10 @@ export function NewTask() {
     }
   }, []);
 
-  function register(event) {
+  function register(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    console.log(taskEdit);
 
     if (taskEdit) {
       Meteor.call(
@@ -53,8 +60,8 @@ export function NewTask() {
         taskEdit._id,
         name,
         description,
-        taskDate.format("DD/MM/YYYY hh:mm:ss"),
-        photo,
+        taskDate,
+        photo ? photo : taskEdit.photo,
         checked ?? false,
         situation
       );

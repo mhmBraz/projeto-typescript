@@ -1,5 +1,4 @@
 import {
-  Alert,
   Avatar,
   Box,
   Button,
@@ -15,7 +14,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { TasksCollection } from "../../../api/collection/taskscollection";
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
@@ -26,11 +25,18 @@ import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
 export function Tasks() {
-  const navegate = useNavigate();
+  const navigate = useNavigate();
 
   const [checked, setChecked] = useState<boolean>();
   const [filterName, setFilterName] = useState("" as string);
   const [pagination, setPagination] = useState({ skip: 0 });
+
+  useEffect(() => {
+    const check = localStorage.getItem("Meteor.userId");
+    if (!check) {
+      navigate("/");
+    }
+  }, []);
 
   const { tasks } = useTracker(() => {
     const handler = Meteor.subscribe("tasks", checked, filterName, pagination);
@@ -45,16 +51,15 @@ export function Tasks() {
   });
 
   function back() {
-    navegate("/dashboard");
+    navigate("/dashboard");
   }
 
   function newTask() {
-    navegate("/criarTarefa");
+    navigate("/criarTarefa");
   }
 
   function paginationChange(event: React.MouseEvent<HTMLElement>) {
-    console.log(event.target.id);
-    if (event.target.id === "nextPagination") {
+    if (event.currentTarget.id === "nextPagination") {
       setPagination((prev) => ({
         ...prev,
         ["skip"]: prev.skip + 4,
@@ -78,7 +83,7 @@ export function Tasks() {
     Meteor.call(
       "tasks.updateSituation",
       taskId,
-      event.target.id === "completed" ? "2" : "1"
+      event.currentTarget.id === "completed" ? "2" : "1"
     );
   }
 
@@ -184,35 +189,37 @@ export function Tasks() {
                     </Box>
                   )}
 
-                  <Box sx={{ display: "flex" }}>
-                    <Button
-                      sx={{ marginRight: 2 }}
-                      variant="contained"
-                      color="warning"
-                      disabled={true}
-                    >
-                      Cadastrada
-                    </Button>
-                    <Button
-                      disabled={task.situation === "1"}
-                      onClick={(e) => situationChange(e, task._id)}
-                      id="progress"
-                      sx={{ marginRight: 2 }}
-                      variant="contained"
-                      color="info"
-                    >
-                      Andamento
-                    </Button>
-                    <Button
-                      disabled={task.situation === "2"}
-                      onClick={(e) => situationChange(e, task._id)}
-                      id="completed"
-                      variant="contained"
-                      color="success"
-                    >
-                      Concluída
-                    </Button>
-                  </Box>
+                  {task.user.id === Meteor.userId() && (
+                    <Box sx={{ display: "flex" }}>
+                      <Button
+                        sx={{ marginRight: 2 }}
+                        variant="contained"
+                        color="warning"
+                        disabled={true}
+                      >
+                        Cadastrada
+                      </Button>
+                      <Button
+                        disabled={task.situation === "1"}
+                        onClick={(e) => situationChange(e, task._id)}
+                        id="progress"
+                        sx={{ marginRight: 2 }}
+                        variant="contained"
+                        color="info"
+                      >
+                        Andamento
+                      </Button>
+                      <Button
+                        disabled={task.situation === "2"}
+                        onClick={(e) => situationChange(e, task._id)}
+                        id="completed"
+                        variant="contained"
+                        color="success"
+                      >
+                        Concluída
+                      </Button>
+                    </Box>
+                  )}
                 </ListItem>
               );
             })}

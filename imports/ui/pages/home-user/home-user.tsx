@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React from "react";
 import { Meteor } from "meteor/meteor";
 import { useNavigate } from "react-router-dom";
 import Card from "@mui/material/Card";
@@ -11,12 +11,30 @@ import { TCountTasks, TUser } from "../../type/types";
 import { useTracker } from "meteor/react-meteor-data";
 
 export function HomeUser() {
-  let user: TUser;
+  let user: TUser = {
+    id: "",
+    username: "",
+    profile: {
+      birthDate: "",
+      company: "",
+      email: "",
+      name: "",
+      photo: "",
+      sex: "",
+    },
+  };
+
   let tasks!: TCountTasks;
 
   const navigate = useNavigate();
 
   useTracker(() => {
+    const check = localStorage.getItem("Meteor.userId");
+
+    if (!check) {
+      navigate("/");
+    }
+
     const meteorUser = Meteor.user();
 
     if (meteorUser) {

@@ -14,7 +14,7 @@ export function FormLoginUser() {
   const [userName, setUserName] = useState("" as string);
   const [userPassword, setUserPassword] = useState("" as string);
 
-  function login(event: React.MouseEvent<HTMLElement>) {
+  function login(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     Meteor.loginWithPassword(userName, userPassword);
 
@@ -81,9 +81,6 @@ export function FormLoginUser() {
           >
             <Grid item xs>
               <Button onClick={register}>Cadastrar</Button>
-            </Grid>
-            <Grid item>
-              <Button>Recuperar senha</Button>
             </Grid>
           </Box>
         </Box>

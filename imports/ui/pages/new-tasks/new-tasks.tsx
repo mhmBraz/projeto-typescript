@@ -38,8 +38,6 @@ export function NewTask() {
   );
 
   useEffect(() => {
-    console.log(taskEdit);
-
     if (taskEdit) {
       setChecked(taskEdit?.private);
       Setname(taskEdit?.name);
@@ -52,7 +50,7 @@ export function NewTask() {
   function register(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    console.log(taskEdit);
+    console.log(taskDate, taskEdit.createdAt);
 
     if (taskEdit) {
       Meteor.call(
@@ -60,7 +58,9 @@ export function NewTask() {
         taskEdit._id,
         name,
         description,
-        taskDate,
+        taskDate !== taskEdit.createdAt
+          ? taskDate.format("DD/MM/YYYY hh:mm:ss")
+          : taskDate,
         photo ? photo : taskEdit.photo,
         checked ?? false,
         situation

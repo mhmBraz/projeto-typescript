@@ -50,8 +50,6 @@ export function NewTask() {
   function register(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    console.log(taskDate, taskEdit.createdAt);
-
     if (taskEdit) {
       Meteor.call(
         "tasks.update",

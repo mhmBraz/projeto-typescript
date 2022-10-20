@@ -28,7 +28,6 @@ Meteor.methods({
       throw new Meteor.Error("Not authorized.");
     }
     const user = Meteor.users.findOne({ _id: Meteor.userId() });
-    console.log(id);
 
     TasksCollection.update(
       { _id: id },

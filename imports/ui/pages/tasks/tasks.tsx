@@ -12,6 +12,7 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
+  TextField,
   Typography,
 } from "@mui/material";
 import React, { useState } from "react";
@@ -21,22 +22,24 @@ import { Meteor } from "meteor/meteor";
 import { useNavigate } from "react-router-dom";
 import { LongMenu } from "../../components/long-menu/long-menu";
 import AddIcon from "@mui/icons-material/Add";
-import { ReactiveVar } from "meteor/reactive-var";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
 export function Tasks() {
   const navegate = useNavigate();
 
-  const [checked, setChecked] = useState();
+  const [checked, setChecked] = useState<boolean>();
+  const [filterName, setFilterName] = useState("" as string);
+  const [pagination, setPagination] = useState({ skip: 0 });
 
   const { tasks } = useTracker(() => {
-    const handler = Meteor.subscribe("tasks", checked);
+    const handler = Meteor.subscribe("tasks", checked, filterName, pagination);
 
     if (!handler.ready()) {
       return { tasks: [] };
     }
 
     const tasks = TasksCollection.find({}).fetch();
-    console.log(tasks);
 
     return { tasks };
   });
@@ -49,9 +52,35 @@ export function Tasks() {
     navegate("/criarTarefa");
   }
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setChecked.set(event.target.checked);
-  };
+  function paginationChange(event: React.MouseEvent<HTMLElement>) {
+    console.log(event.target.id);
+    if (event.target.id === "nextPagination") {
+      setPagination((prev) => ({
+        ...prev,
+        ["skip"]: prev.skip + 4,
+      }));
+    } else {
+      setPagination((prev) => ({
+        ...prev,
+        ["skip"]: prev.skip - 4,
+      }));
+    }
+  }
+
+  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setChecked(event.target.checked);
+  }
+
+  function situationChange(
+    event: React.MouseEvent<HTMLElement>,
+    taskId: string
+  ) {
+    Meteor.call(
+      "tasks.updateSituation",
+      taskId,
+      event.target.id === "completed" ? "2" : "1"
+    );
+  }
 
   return (
     <Container
@@ -80,7 +109,6 @@ export function Tasks() {
 
       <Box
         sx={{
-          marginTop: 8,
           display: "flex",
           justifyContent: "center",
         }}
@@ -88,65 +116,130 @@ export function Tasks() {
         <List
           sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}
         >
+          <TextField
+            onChange={(e) => setFilterName(e.target.value)}
+            value={filterName || ""}
+            autoComplete="given-name"
+            name="name"
+            required
+            fullWidth
+            id="name"
+            label="Pesquisar"
+            autoFocus
+          />
           <FormControlLabel
             control={
               <Checkbox onChange={handleChange} checked={checked || false} />
             }
             label="Exibir somentes as concluidas"
           />
-          {tasks.map((task, index) => {
-            return (
-              <ListItem key={index} disablePadding>
-                <ListItemAvatar>
-                  <Avatar alt="Remy Sharp" src={task.photo} />
-                </ListItemAvatar>
-                <ListItemText
-                  primary={task.name}
-                  secondary={
-                    <React.Fragment>
-                      <>
-                        <Typography
-                          component="span"
-                          variant="body2"
-                          color="text.primary"
-                        >
-                          Criado por: {task.user.username}
-                        </Typography>
-                      </>
-                    </React.Fragment>
-                  }
-                />
-                <ListItemText
-                  primary={task.description}
-                  secondary={
-                    <React.Fragment>
-                      <>
-                        <Typography
-                          component="span"
-                          variant="body2"
-                          color="text.primary"
-                        >
-                          {task.createdAt}
-                        </Typography>
-                      </>
-                    </React.Fragment>
-                  }
-                />
-                {task.user.id === Meteor.userId() && <LongMenu task={task} />}
-              </ListItem>
-            );
-          })}
+
+          <Box sx={{ minHeight: 450 }}>
+            {tasks.map((task, index) => {
+              return (
+                <ListItem sx={{ marginBottom: 2 }} key={index} disablePadding>
+                  <Box sx={{ display: "flex", minWidth: 400 }}>
+                    <ListItemAvatar>
+                      <Avatar alt="Remy Sharp" src={task.photo} />
+                    </ListItemAvatar>
+                    <ListItemText
+                      sx={{ marginRight: 4 }}
+                      primary={task.name}
+                      secondary={
+                        <React.Fragment>
+                          <>
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              color="text.primary"
+                            >
+                              Criado por: {task.user.username}
+                            </Typography>
+                          </>
+                        </React.Fragment>
+                      }
+                    />
+                    <ListItemText
+                      primary={task.description}
+                      secondary={
+                        <React.Fragment>
+                          <>
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              color="text.primary"
+                            >
+                              {task.createdAt}
+                            </Typography>
+                          </>
+                        </React.Fragment>
+                      }
+                    />
+                  </Box>
+
+                  {task.user.id === Meteor.userId() && (
+                    <Box>
+                      {" "}
+                      <LongMenu task={task} />
+                    </Box>
+                  )}
+
+                  <Box sx={{ display: "flex" }}>
+                    <Button
+                      sx={{ marginRight: 2 }}
+                      variant="contained"
+                      color="warning"
+                      disabled={true}
+                    >
+                      Cadastrada
+                    </Button>
+                    <Button
+                      disabled={task.situation === "1"}
+                      onClick={(e) => situationChange(e, task._id)}
+                      id="progress"
+                      sx={{ marginRight: 2 }}
+                      variant="contained"
+                      color="info"
+                    >
+                      Andamento
+                    </Button>
+                    <Button
+                      disabled={task.situation === "2"}
+                      onClick={(e) => situationChange(e, task._id)}
+                      id="completed"
+                      variant="contained"
+                      color="success"
+                    >
+                      Concluída
+                    </Button>
+                  </Box>
+                </ListItem>
+              );
+            })}
+          </Box>
+
+          <Box sx={{ display: "flex", justifyContent: "center" }}>
+            <Fab
+              disabled={pagination.skip === 0}
+              sx={{ marginRight: 1 }}
+              onClick={paginationChange}
+              id="backPagination"
+              color="primary"
+              aria-label="add"
+            >
+              <ArrowBackIosIcon id="backPagination" />
+            </Fab>
+            <Fab
+              disabled={tasks.length < 4}
+              onClick={paginationChange}
+              id="nextPagination"
+              color="primary"
+              aria-label="add"
+            >
+              <ArrowForwardIosIcon id="nextPagination" />
+            </Fab>
+          </Box>
         </List>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "flex-start",
-          }}
-        >
-          {!Object.keys(tasks).length && (
-            <Alert severity="error">Nenhuma tarefa cadastrada</Alert>
-          )}
-        </Box>
       </Box>
       <Box
         sx={{

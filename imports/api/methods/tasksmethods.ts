@@ -22,6 +22,7 @@ Meteor.methods({
       situation: situation ?? 0,
     });
   },
+
   "tasks.update"(id, name, description, date, photo, checked, situation) {
     if (!Meteor.userId()) {
       throw new Meteor.Error("Not authorized.");
@@ -51,6 +52,19 @@ Meteor.methods({
     }
 
     TasksCollection.remove(taskId);
+  },
+
+  "tasks.updateSituation"(taskId, situation: string) {
+    check(taskId, String);
+    if (!Meteor.userId()) {
+      throw new Meteor.Error("Not authorized.");
+    }
+
+    TasksCollection.update(taskId, {
+      $set: {
+        situation,
+      },
+    });
   },
 
   "tasks.setIsChecked"(taskId, isChecked) {
